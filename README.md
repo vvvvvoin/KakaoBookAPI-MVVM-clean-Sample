@@ -12,6 +12,7 @@
 - Koin
 - Retrofit2
 - RxJava
+- DataBinding
 
 ## 스크린샷
 
@@ -25,6 +26,4 @@
 ![1](image/1.GIF)  ![1](image/2.GIF)
 
 
-
-> 데이터 바인딩 추가 예정
 
