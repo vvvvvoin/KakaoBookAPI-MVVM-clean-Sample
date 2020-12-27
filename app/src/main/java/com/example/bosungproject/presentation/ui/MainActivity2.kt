@@ -1,30 +1,29 @@
 package com.example.bosungproject.presentation.ui
 
+import android.app.Activity
 import android.content.ActivityNotFoundException
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.view.LayoutInflater
 import android.view.View
+import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
-import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.example.bosungproject.R
 import com.example.bosungproject.databinding.ActivityMain2Binding
-import com.example.bosungproject.databinding.SearchDetailBinding
 import com.example.bosungproject.domain.model.KakaoSearchSortEnum
 import com.example.bosungproject.domain.model.SearchQuery
 import com.example.bosungproject.presentation.adapter.BookSearchAdapter
-import com.example.bosungproject.presentation.adapter.LinearLayoutManagerWrapper
 import com.example.bosungproject.presentation.ui.fragment.SearchFragment
 import com.example.bosungproject.presentation.ui.viewModel.SearchViewModel
 import com.example.bosungproject.presentation.util.BackPressCloseHandler
+import com.example.bosungproject.presentation.util.EventObserver
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.activity_main2.*
 import kotlinx.android.synthetic.main.search_detail.*
 import kotlinx.android.synthetic.main.search_detail.view.*
@@ -60,15 +59,15 @@ class MainActivity2 : AppCompatActivity() {
 
         searchDetailBehavior = BottomSheetBehavior.from(search_detail_bottomSheet)
         bookSearchAdapter.onItemClick { view, position, data ->
-            if (supportFragmentManager.backStackEntryCount != 0) {
-                supportFragmentManager.popBackStackImmediate()
-            }
+            if (supportFragmentManager.backStackEntryCount != 0) supportFragmentManager.popBackStackImmediate()
+            hideKeyboard()
             searchDetailBehavior.state = BottomSheetBehavior.STATE_EXPANDED
             binding.searchDetailBottomSheet.item = data
             Glide.with(this@MainActivity2).load(data.thumbnail).into(binding.searchDetailBottomSheet.detailImage)
         }
 
-        initViewModel()
+        initObserve()
+        viewModel.search(SearchQuery("베스트 셀러", KakaoSearchSortEnum.Accuracy,1,10))
 
         backPressCloseHandler = BackPressCloseHandler(this)
 
@@ -78,12 +77,12 @@ class MainActivity2 : AppCompatActivity() {
         }
     }
 
-    private fun initViewModel(){
-        viewModel.search(SearchQuery("베스트 셀러", KakaoSearchSortEnum.Accuracy,1,10))
-        viewModel.searchQuery.observe(this, Observer {
-            binding.searchCustomBar01.getSearchTextView().text = it
+    private fun initObserve(){
+        viewModel.error.observe(this, EventObserver{
+            if(it == "network") Toast.makeText(this, "네트워크 연결을 확인해주세요", Toast.LENGTH_SHORT).show()
+            else Toast.makeText(this, "서버 연결이 불안정합니다", Toast.LENGTH_SHORT).show()
         })
-        viewModel.openWep.observe(this, Observer {
+        viewModel.openWep.observe(this, EventObserver {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(it))
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             intent.setPackage("com.android.chrome")
@@ -93,7 +92,30 @@ class MainActivity2 : AppCompatActivity() {
                 Toast.makeText(this, "링크를 열수 없습니다.", Toast.LENGTH_SHORT).show()
             }
         })
+        viewModel.searchQuery.observe(this, EventObserver {
+            binding.searchCustomBar01.getSearchTextView().text = it
+            if (supportFragmentManager.backStackEntryCount != 0) supportFragmentManager.popBackStackImmediate()
+            hideKeyboard()
+        })
+
+        viewModel.searchQuery.observe(this, Observer {
+            it.peekContent().let {
+
+            }
+        })
     }
+
+
+    private fun Activity.hideKeyboard() {
+        hideKeyboard(if (currentFocus == null) View(this) else currentFocus!!)
+    }
+
+    private fun Context.hideKeyboard(view: View) {
+        val inputMethodManager =
+            getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+        inputMethodManager.hideSoftInputFromWindow(view.windowToken, 0)
+    }
+
 
     override fun onBackPressed() {
         if (supportFragmentManager.backStackEntryCount != 0) {

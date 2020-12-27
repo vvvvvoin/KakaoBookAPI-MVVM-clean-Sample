@@ -1,16 +1,13 @@
 package com.example.bosungproject.presentation.adapter
 
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.TextView
+import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.Target
-import com.example.bosungproject.R
 import com.example.bosungproject.databinding.SearchItemBinding
 import com.example.bosungproject.domain.model.KakaoSearchSortEnum
 import com.example.bosungproject.domain.model.SearchData
@@ -19,10 +16,10 @@ import com.example.bosungproject.presentation.ui.viewModel.SearchViewModel
 
 class BookSearchAdapter(private val viewModel : SearchViewModel): RecyclerView.Adapter<BookSearchAdapter.ItemHolder>(){
 
-    var searchData = ArrayList<SearchData.Documents>()
-    var query = viewModel.searchQuery.value
+    var searchList = ArrayList<SearchData.Documents>()
+    var query = ""
     var moreLoad = false
-    var pageable_count = 0
+    var page = 0
 
     private lateinit var  itemClickListener: ItemClickListener
     interface ItemClickListener  {
@@ -34,7 +31,7 @@ class BookSearchAdapter(private val viewModel : SearchViewModel): RecyclerView.A
     }
 
     override fun getItemCount(): Int {
-        return searchData.size
+        return searchList.size
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int)=
@@ -42,16 +39,18 @@ class BookSearchAdapter(private val viewModel : SearchViewModel): RecyclerView.A
 
 
     override fun onBindViewHolder(holder: ItemHolder, position: Int) {
-        if(position > searchData.size - 4 && moreLoad){
+        if (position > searchList.size - 4 && moreLoad && page != -1) {
 /*            viewModel.search(SearchQuery(query, KakaoSearchSortEnum.Accuracy, ))*/
+            moreLoad = false
+            viewModel.search(SearchQuery(query!!, KakaoSearchSortEnum.Accuracy, page, 10))
         }
 
         onItemClickListener.let {
             holder.holderLayout.setOnClickListener {
-              onItemClickListener?.onClick(it, position, searchData[position])
+              onItemClickListener?.onClick(it, position, searchList[position])
             }
         }
-        holder.bind(searchData[position])
+        holder.bind(searchList[position])
     }
 
     inner class ItemHolder(private val binding : SearchItemBinding) : RecyclerView.ViewHolder(binding.root){

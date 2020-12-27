@@ -7,10 +7,11 @@ import com.example.bosungproject.domain.model.SearchData
 import com.example.bosungproject.presentation.adapter.BookSearchAdapter
 import com.example.bosungproject.presentation.ui.viewModel.SearchViewModel
 
-@BindingAdapter("item")
+@BindingAdapter("item", "query")
 fun setBookList(
     recyclerView: RecyclerView,
-    item: SearchData?
+    item: SearchData?,
+    query : String
 ) {
     val bookAdapter: BookSearchAdapter
 
@@ -20,16 +21,22 @@ fun setBookList(
         bookAdapter = recyclerView.adapter as BookSearchAdapter
     }
 
-    //여기서 쿼리문을 비교해서 2가지 경우 처리
-    recyclerView.scrollToPosition(0)
-
     item?.let {
-        bookAdapter.moreLoad = it.meta.is_end
-        bookAdapter.pageable_count = it.meta.pageable_count
-        bookAdapter.searchData = it.documents
+        if (item.documents.size == item.meta.total_count) {
+            recyclerView.scrollToPosition(0)
+            bookAdapter.page = -1
+        } else{
+            bookAdapter.page = (item.documents.size / 10) + 1
+            if(bookAdapter.page == 1) recyclerView.scrollToPosition(0)
+        }
+        if(item.meta.is_end == true) bookAdapter.page = -1
+        bookAdapter.query = query
+        bookAdapter.searchList = it.documents
+        bookAdapter.moreLoad = true
         bookAdapter.notifyDataSetChanged()
     }
 }
+
 @BindingAdapter("viewModel", "link")
 fun openWep(
     textView: TextView,

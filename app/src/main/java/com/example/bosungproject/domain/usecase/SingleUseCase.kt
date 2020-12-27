@@ -20,7 +20,7 @@ abstract class SingleUseCase<T, R>() {
             .subscribe({
                 result.value = it
             }, {
-                result.value = Result.Failure(it.message!!)
+                result.value = Result.Failure("network")
             })
     }
 

@@ -39,6 +39,7 @@
                 android:layout_marginTop="15dp"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                 app:item="@{viewModel.searchData}"
+                app:query="@{viewModel.query}"
                 tools:listitem="@layout/search_item" />
         </LinearLayout>
 
