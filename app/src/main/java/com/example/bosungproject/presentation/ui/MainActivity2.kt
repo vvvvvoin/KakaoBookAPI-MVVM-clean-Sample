@@ -35,7 +35,7 @@ class MainActivity2 : AppCompatActivity() {
     private lateinit var searchDetailBehavior: BottomSheetBehavior<View>
     private val viewModel: SearchViewModel by viewModel()
 
-    lateinit var binding: ActivityMain2Binding
+    private lateinit var binding: ActivityMain2Binding
 
     private val bookSearchAdapter: BookSearchAdapter by lazy {
         BookSearchAdapter(viewModel)
@@ -59,11 +59,9 @@ class MainActivity2 : AppCompatActivity() {
 
         searchDetailBehavior = BottomSheetBehavior.from(search_detail_bottomSheet)
         bookSearchAdapter.onItemClick { view, position, data ->
-            if (supportFragmentManager.backStackEntryCount != 0) supportFragmentManager.popBackStackImmediate()
-            hideKeyboard()
+            hideFragment()
             searchDetailBehavior.state = BottomSheetBehavior.STATE_EXPANDED
             binding.searchDetailBottomSheet.item = data
-            Glide.with(this@MainActivity2).load(data.thumbnail).into(binding.searchDetailBottomSheet.detailImage)
         }
 
         initObserve()
@@ -94,17 +92,14 @@ class MainActivity2 : AppCompatActivity() {
         })
         viewModel.searchQuery.observe(this, EventObserver {
             binding.searchCustomBar01.getSearchTextView().text = it
-            if (supportFragmentManager.backStackEntryCount != 0) supportFragmentManager.popBackStackImmediate()
-            hideKeyboard()
-        })
-
-        viewModel.searchQuery.observe(this, Observer {
-            it.peekContent().let {
-
-            }
+            hideFragment()
         })
     }
 
+    private fun hideFragment(){
+        if (supportFragmentManager.backStackEntryCount != 0) supportFragmentManager.popBackStackImmediate()
+        hideKeyboard()
+    }
 
     private fun Activity.hideKeyboard() {
         hideKeyboard(if (currentFocus == null) View(this) else currentFocus!!)

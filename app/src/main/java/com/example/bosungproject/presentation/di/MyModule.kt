@@ -1,14 +1,22 @@
 package com.example.bosungproject.presentation.di
 
 
+import androidx.room.Room
 import com.example.bosungproject.data.api.SearchAPIService
+import com.example.bosungproject.data.dataSource.SearchHistoryLocalDataSource
 import com.example.bosungproject.data.dataSource.SearchRemoteDataSource
+import com.example.bosungproject.data.db.SearchHistoryDatabase
+import com.example.bosungproject.data.repository.SearchHistoryRepositoryImpl
 import com.example.bosungproject.data.repository.SearchRepositoryImpl
+import com.example.bosungproject.domain.repository.SearchHistoryRepository
 import com.example.bosungproject.domain.repository.SearchRepository
+import com.example.bosungproject.domain.usecase.GetHistoryUseCase
+import com.example.bosungproject.domain.usecase.InsertHistoryUseCase
 import com.example.bosungproject.domain.usecase.SearchUseCase
 import com.example.bosungproject.presentation.ui.viewModel.SearchViewModel
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
+import org.koin.android.ext.koin.androidApplication
 import org.koin.androidx.viewmodel.ext.koin.viewModel
 import org.koin.dsl.module.module
 import retrofit2.Retrofit
@@ -45,20 +53,28 @@ var retrofitPart = module {
     single{bookSearchApi }
 }
 
+var dbPart = module {
+    single { Room.databaseBuilder(androidApplication(), SearchHistoryDatabase::class.java, "search_history").build() }
+}
+
 val dataSourceModule = module {
     factory { SearchRemoteDataSource(get()) }
+    factory { SearchHistoryLocalDataSource(get())  }
 }
 
 val repositoryModule = module {
     factory<SearchRepository> { SearchRepositoryImpl(get()) }
+    factory<SearchHistoryRepository> { SearchHistoryRepositoryImpl(get()) }
 }
 
 val useCaseModule = module {
     factory { SearchUseCase(get()) }
+    factory { GetHistoryUseCase(get()) }
+    factory { InsertHistoryUseCase(get()) }
 }
 
 val viewModelModule = module {
-    viewModel { SearchViewModel(get())}
+    viewModel { SearchViewModel(get(), get(), get())}
 }
 
-var myDiModule = listOf(viewModelModule, useCaseModule, repositoryModule, dataSourceModule, retrofitPart)
+var myDiModule = listOf(viewModelModule, useCaseModule, repositoryModule, dataSourceModule, retrofitPart, dbPart)

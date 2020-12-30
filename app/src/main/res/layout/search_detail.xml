@@ -25,7 +25,8 @@
             android:layout_width="250dp"
             android:layout_height="250dp"
             android:layout_gravity="center"
-            android:layout_marginVertical="20dp" />
+            android:layout_marginVertical="20dp"
+            app:bind_image="@{item.thumbnail}" />
 
         <LinearLayout
             android:layout_width="match_parent"

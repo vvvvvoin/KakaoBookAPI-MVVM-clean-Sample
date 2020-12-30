@@ -11,6 +11,7 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import androidx.databinding.DataBindingUtil
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.observe
@@ -18,6 +19,8 @@ import com.example.bosungproject.R
 import com.example.bosungproject.databinding.FragmentSearchBinding
 import com.example.bosungproject.domain.model.KakaoSearchSortEnum
 import com.example.bosungproject.domain.model.SearchQuery
+import com.example.bosungproject.presentation.adapter.BookSearchAdapter
+import com.example.bosungproject.presentation.adapter.SearchHistoryAdapter
 import com.example.bosungproject.presentation.ui.customView.SearchBar02CustomView
 import com.example.bosungproject.presentation.ui.viewModel.SearchViewModel
 import com.example.bosungproject.presentation.util.EventObserver
@@ -30,7 +33,12 @@ class SearchFragment : Fragment() {
     private lateinit var inputMethodManager : InputMethodManager
 
     private lateinit var binding : FragmentSearchBinding
+    private lateinit var viewModel : SearchViewModel
     private lateinit var  searchEditText : EditText
+
+    private val searchHistoryAdapter: SearchHistoryAdapter by lazy {
+        SearchHistoryAdapter(viewModel)
+    }
 
     override fun onResume() {
         searchEditText.requestFocus()
@@ -43,10 +51,18 @@ class SearchFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_search, container, false)
+        viewModel = ViewModelProvider(activity!!).get(SearchViewModel::class.java)
+
         binding.apply {
-            viewModel = ViewModelProvider(activity!!).get(SearchViewModel::class.java)
-            lifecycleOwner = this@SearchFragment
+            viewModel = this@SearchFragment.viewModel
+            lifecycleOwner = activity
         }
+
+        binding.searchHistoryRecycler.apply {
+            adapter = searchHistoryAdapter
+            setHasFixedSize(true)
+        }
+
         searchEditText = binding.searchEditText
 
         inputMethodManager = container?.context?.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
@@ -55,6 +71,12 @@ class SearchFragment : Fragment() {
             inputMethodManager.hideSoftInputFromWindow(it.windowToken, InputMethodManager.HIDE_IMPLICIT_ONLY)
             activity?.onBackPressed()
         }
+
+        viewModel.searchQuery.observe(this, EventObserver {
+            if(it != null){
+                activity?.onBackPressed()
+            }
+        })
 
         return binding.root
     }
